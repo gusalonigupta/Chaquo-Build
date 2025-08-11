@@ -51,19 +51,19 @@ jobs:
           ${{ runner.os }}-gradle-
         
     - name: Build Debug AAR
-      run: ./gradlew :chaquopy-lib:assembleDebug
+      run: ./gradlew :lib:assembleDebug
         
     - name: Upload Debug AAR
       uses: actions/upload-artifact@v4
       with:
-        name: chaquopy-lib-debug.aar
-        path: chaquopy-lib/build/outputs/aar/chaquopy-lib-debug.aar
+        name: lib-debug.aar
+        path: lib/build/outputs/aar/lib-debug.aar
 
     - name: Build Release AAR
-      run: ./gradlew :chaquopy-lib:assembleRelease
+      run: ./gradlew :lib:assembleRelease
       
     - name: Upload Release AAR
       uses: actions/upload-artifact@v4
       with:
-        name: chaquopy-lib-release.aar
-        path: chaquopy-lib/build/outputs/aar/chaquopy-lib-release.aar
+        name: lib-release.aar
+        path: lib/build/outputs/aar/lib-release.aar
