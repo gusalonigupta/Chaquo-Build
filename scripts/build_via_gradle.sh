@@ -67,7 +67,7 @@ git checkout "$CHAQUOPY_REF" || true
 popd >/dev/null
 
 # Run Gradle in chaquopy repo. Use the repo's gradlew.
-GRADLEW="./chaquopy/gradlew"
+GRADLEW="./chaquopy/product/gradlew"
 if [[ ! -x "$GRADLEW" ]]; then
   echo "Gradle wrapper not found or not executable at $GRADLEW"
   exit 2
@@ -76,7 +76,7 @@ fi
 # 1) build Python runtime for requested version (bootstrap, stdlib)
 echo "Running Gradle: buildPython for Python $PY_SHORT (this may take several minutes)..."
 set +e
-"$GRADLEW" --no-daemon :product:runtime:buildPython -PpythonVersion="$PY_SHORT" --console=plain >"$LOG" 2>&1
+"$GRADLEW" --no-daemon :runtime:buildPython -PpythonVersion="$PY_SHORT" --console=plain >"$LOG" 2>&1
 RC_BP=$?
 set -e
 if [[ $RC_BP -ne 0 ]]; then
@@ -93,7 +93,7 @@ ABI_STR="${ABIS[*]}"
 
 echo "Running Gradle: generateRequirements (requirements: $REQ_STR ; abis: $ABI_STR)"
 set +e
-"$GRADLEW" --no-daemon :product:gradle-plugin:generateRequirements \
+"$GRADLEW" --no-daemon :gradle-plugin:generateRequirements \
   -PpythonVersion="$PY_SHORT" \
   -Prequirements="$REQ_STR" \
   -PandroidAbis="$ABI_STR" \
