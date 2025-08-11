@@ -205,10 +205,10 @@ if [[ -z "$(find "$OUT_DIR" -type f -name '*.imy' -print -quit)" ]]; then
 fi
 
 # final sanity check
-if [[ -z "$(find "$OUT_DIR" -type f -name '*.imy' -print -quit)" ]]; then
-  echo "ERROR: no .imy files found in Chaquopy build outputs. See gradle log: $LOG"
-  exit 4
-fi
+##if [[ -z "$(find "$OUT_DIR" -type f -name '*.imy' -print -quit)" ]]; then
+##  echo "ERROR: no .imy files found in Chaquopy build outputs. See gradle log: $LOG"
+##  exit 4
+##fi
 
 # 4) create zip artifact
 BUNDLE_ZIP="$OUT_DIR/bundle-py${PY_SHORT}-$OUT_TS.zip"
