@@ -6,5 +6,5 @@ pluginManagement {
     }
 }
 
-rootProject.name = "chaquopy-aar-sample"
-include(":chaquopy-lib")
+rootProject.name = "lib"
+include(":lib")

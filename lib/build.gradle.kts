@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pybridge"
+    namespace = "lib"
     compileSdk = 34
 
     defaultConfig {
@@ -12,7 +12,7 @@ android {
         targetSdk = 34
 
         ndk {
-            abiFilters += listOf("arm64-v8a") // add other ABIs if needed
+            abiFilters += listOf("arm64-v8a")
         }
     }
 
@@ -43,5 +43,4 @@ chaquopy {
 }
 
 dependencies {
-    // no java/kotlin dependencies, keep clean
 }
