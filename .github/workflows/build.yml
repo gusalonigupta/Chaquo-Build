@@ -1,10 +1,18 @@
 name: Build Chaquopy Bundles
 
 on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
   workflow_dispatch:
     inputs:
       python:
-        description: 'Host Python (major.minor) used for building (e.g. 3.11)'
+        description: 'Host Python (major.minor) to use for builds (e.g. 3.11)'
         required: true
         default: '3.11'
       packages:
@@ -16,7 +24,7 @@ on:
         required: true
         default: 'arm64-v8a x86_64'
       chaquopy_ref:
-        description: 'Chaquopy repo ref (branch/tag/commit; optional)'
+        description: 'Chaquopy git ref (branch/tag/commit). Defaults to master'
         required: false
         default: 'master'
 
@@ -24,13 +32,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout builder
+      - name: Checkout builder repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Java (Gradle needs JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Python (host)
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ github.event.inputs.python }}
+          python-version: ${{ github.event.inputs.python || '3.11' }}
 
       - name: Install system build deps (common)
         run: |
@@ -41,20 +55,25 @@ jobs:
 
       - name: Run bundle builder
         env:
-          CHAQUOPY_REF: ${{ github.event.inputs.chaquopy_ref }}
+          CHAQUOPY_REF: ${{ github.event.inputs.chaquopy_ref || 'master' }}
           OUT_BASE: ${{ github.workspace }}/bundle-output
+          EXTRA_INDEX: https://chaquo.com/pypi-13.1
         run: |
+          echo "Inputs:"
+          echo "  python = ${{ github.event.inputs.python }}"
+          echo "  packages = ${{ github.event.inputs.packages }}"
+          echo "  abis = ${{ github.event.inputs.abis }}"
+          echo "  chaquopy_ref = ${{ github.event.inputs.chaquopy_ref }}"
           PKGS="${{ github.event.inputs.packages }}"
-          # Convert comma-separated into separate args
           IFS=',' read -ra REQ_ARR <<< "$PKGS"
           ABIS="${{ github.event.inputs.abis }}"
           read -r -a ABI_ARR <<< "$ABIS"
           ARGS=( --python "${{ github.event.inputs.python }}" )
           for r in "${REQ_ARR[@]}"; do ARGS+=( --package "$r" ); done
           for a in "${ABI_ARR[@]}"; do ARGS+=( --abi "$a" ); done
-          echo "Invoking: scripts/build_chaquopy_bundle.sh ${ARGS[*]}"
-          chmod +x scripts/build_chaquopy_bundle.sh
-          ./scripts/build_chaquopy_bundle.sh "${ARGS[@]}"
+          echo "Invoking: scripts/build_via_gradle.sh ${ARGS[*]}"
+          chmod +x scripts/build_via_gradle.sh
+          ./scripts/build_via_gradle.sh "${ARGS[@]}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
