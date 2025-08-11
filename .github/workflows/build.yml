@@ -1,52 +1,45 @@
 name: Build Chaquopy Bundles
 
 on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
   workflow_dispatch:
     inputs:
       python:
-        description: 'Host Python (major.minor) to use for builds (e.g. 3.11)'
-        required: true
+        description: 'Host Python (major.minor) used for building (e.g. 3.11)'
+        required: false
         default: '3.11'
       packages:
         description: 'Comma-separated pip requirements, e.g. "yt-dlp==2025.08.01,pycryptodome==3.19.0"'
-        required: true
+        required: false
         default: 'yt-dlp'
       abis:
         description: 'Space-separated ABIs (e.g. "arm64-v8a armeabi-v7a x86_64")'
-        required: true
+        required: false
         default: 'arm64-v8a x86_64'
       chaquopy_ref:
-        description: 'Chaquopy git ref (branch/tag/commit). Defaults to master'
+        description: 'Chaquopy repo ref (branch/tag/commit; optional)'
         required: false
         default: 'master'
+
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout builder repo
+      - name: Checkout builder
         uses: actions/checkout@v4
 
-      - name: Setup Java (Gradle needs JDK)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Python (host)
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ github.event.inputs.python || '3.11' }}
 
-      - name: Install system build deps (common)
+      - name: Install system build deps
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git pkg-config \
@@ -57,20 +50,18 @@ jobs:
         env:
           CHAQUOPY_REF: ${{ github.event.inputs.chaquopy_ref || 'master' }}
           OUT_BASE: ${{ github.workspace }}/bundle-output
-          EXTRA_INDEX: https://chaquo.com/pypi-13.1
         run: |
-          echo "Inputs:"
-          echo "  python = ${{ github.event.inputs.python }}"
-          echo "  packages = ${{ github.event.inputs.packages }}"
-          echo "  abis = ${{ github.event.inputs.abis }}"
-          echo "  chaquopy_ref = ${{ github.event.inputs.chaquopy_ref }}"
-          PKGS="${{ github.event.inputs.packages }}"
+          PY_VER="${{ github.event.inputs.python || '3.11' }}"
+          PKGS="${{ github.event.inputs.packages || 'yt-dlp' }}"
+          ABIS="${{ github.event.inputs.abis || 'arm64-v8a x86_64' }}"
+
           IFS=',' read -ra REQ_ARR <<< "$PKGS"
-          ABIS="${{ github.event.inputs.abis }}"
           read -r -a ABI_ARR <<< "$ABIS"
-          ARGS=( --python "${{ github.event.inputs.python }}" )
+
+          ARGS=( --python "$PY_VER" )
           for r in "${REQ_ARR[@]}"; do ARGS+=( --package "$r" ); done
           for a in "${ABI_ARR[@]}"; do ARGS+=( --abi "$a" ); done
+
           echo "Invoking: scripts/build_via_gradle.sh ${ARGS[*]}"
           chmod +x scripts/build_via_gradle.sh
           ./scripts/build_via_gradle.sh "${ARGS[@]}"
