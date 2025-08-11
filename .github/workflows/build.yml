@@ -1,0 +1,63 @@
+name: Build Chaquopy Bundles
+
+on:
+  workflow_dispatch:
+    inputs:
+      python:
+        description: 'Host Python (major.minor) used for building (e.g. 3.11)'
+        required: true
+        default: '3.11'
+      packages:
+        description: 'Comma-separated pip requirements, e.g. "yt-dlp==2025.08.01,pycryptodome==3.19.0"'
+        required: true
+        default: 'yt-dlp'
+      abis:
+        description: 'Space-separated ABIs (e.g. "arm64-v8a armeabi-v7a x86_64")'
+        required: true
+        default: 'arm64-v8a x86_64'
+      chaquopy_ref:
+        description: 'Chaquopy repo ref (branch/tag/commit; optional)'
+        required: false
+        default: 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout builder
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ github.event.inputs.python }}
+
+      - name: Install system build deps (common)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git pkg-config \
+            zlib1g-dev libssl-dev libbz2-dev libreadline-dev libsqlite3-dev \
+            libffi-dev liblzma-dev libgmp-dev
+
+      - name: Run bundle builder
+        env:
+          CHAQUOPY_REF: ${{ github.event.inputs.chaquopy_ref }}
+          OUT_BASE: ${{ github.workspace }}/bundle-output
+        run: |
+          PKGS="${{ github.event.inputs.packages }}"
+          # Convert comma-separated into separate args
+          IFS=',' read -ra REQ_ARR <<< "$PKGS"
+          ABIS="${{ github.event.inputs.abis }}"
+          read -r -a ABI_ARR <<< "$ABIS"
+          ARGS=( --python "${{ github.event.inputs.python }}" )
+          for r in "${REQ_ARR[@]}"; do ARGS+=( --package "$r" ); done
+          for a in "${ABI_ARR[@]}"; do ARGS+=( --abi "$a" ); done
+          echo "Invoking: scripts/build_chaquopy_bundle.sh ${ARGS[*]}"
+          chmod +x scripts/build_chaquopy_bundle.sh
+          ./scripts/build_chaquopy_bundle.sh "${ARGS[@]}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaquopy-bundles
+          path: bundle-output/
