@@ -61,7 +61,7 @@ if [[ ! -d "chaquopy" ]]; then
   echo "Cloning Chaquopy..."
   git clone --depth 1 https://github.com/chaquo/chaquopy.git chaquopy
 fi
-pushd chaquopy >/dev/null
+pushd chaquopy/product >/dev/null
 git fetch --depth 1 origin "$CHAQUOPY_REF" || true
 git checkout "$CHAQUOPY_REF" || true
 popd >/dev/null
@@ -76,7 +76,9 @@ fi
 # 1) build Python runtime for requested version (bootstrap, stdlib)
 echo "Running Gradle: buildPython for Python $PY_SHORT (this may take several minutes)..."
 set +e
+pushd chaquopy/product >/dev/null
 "$GRADLEW" --no-daemon :runtime:buildPython -PpythonVersion="$PY_SHORT" --console=plain >"$LOG" 2>&1
+popd >/dev/null
 RC_BP=$?
 set -e
 if [[ $RC_BP -ne 0 ]]; then
@@ -93,6 +95,7 @@ ABI_STR="${ABIS[*]}"
 
 echo "Running Gradle: generateRequirements (requirements: $REQ_STR ; abis: $ABI_STR)"
 set +e
+pushd chaquopy/product >/dev/null
 "$GRADLEW" --no-daemon :gradle-plugin:generateRequirements \
   -PpythonVersion="$PY_SHORT" \
   -Prequirements="$REQ_STR" \
@@ -100,6 +103,7 @@ set +e
   -PminApiLevel="$MIN_API" \
   -PextraIndexUrl="$EXTRA_INDEX" \
   --console=plain >>"$LOG" 2>&1
+popd >/dev/null
 RC_REQ=$?
 set -e
 
