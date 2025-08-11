@@ -22,26 +22,20 @@ jobs:
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        cmdline-tools-version: '11076708'
-        
-    - name: Accept Android SDK licenses
-      run: yes | sdkmanager --licenses || true
       
-    - name: Create gradle wrapper
+    # This section is your clever solution for a PC-less environment.
+    - name: Create gradle wrapper properties
       run: |
         mkdir -p gradle/wrapper
-        echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
-        echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.4-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
-        echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
-        echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        # This now matches your committed gradle-wrapper.properties file
+        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip" > gradle/wrapper/gradle-wrapper.properties
         
     - name: Download gradle wrapper files
       run: |
-        curl -L https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-        curl -L https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew -o gradlew
-        curl -L https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew.bat -o gradlew.bat
+        # Using curl to download the wrapper files because they are not in the repo
+        curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+        curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradlew -o gradlew
+        curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradlew.bat -o gradlew.bat
       
     - name: Make gradlew executable
       run: chmod +x ./gradlew
@@ -52,7 +46,7 @@ jobs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
         

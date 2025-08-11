@@ -39,10 +39,6 @@ chaquopy {
             install("pycurl")
         }
     }
-
-    sourceSets.getByName("main") {
-        setSrcDirs(listOf("src/main/python"))
-    }
 }
 
 dependencies {
