@@ -50,8 +50,20 @@ jobs:
     - name: Build Debug AAR
       run: ./gradlew :lib:assembleDebug
         
-    - name: Upload Debug AAR
+    - name: Build AAR for abi32 (Python 3.11)
+      run: ./gradlew :lib:assembleAbi32Debug
+        
+    - name: Upload abi32 AAR
       uses: actions/upload-artifact@v4
       with:
-        name: lib-debug.aar
-        path: lib/build/outputs/aar/lib-debug.aar
+        name: lib-abi32-debug.aar
+        path: lib/build/outputs/aar/lib-abi32-debug.aar
+
+    - name: Build AAR for abi64 (Python 3.12)
+      run: ./gradlew :lib:assembleAbi64Debug
+        
+    - name: Upload abi64 AAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-abi64-debug.aar
+        path: lib/build/outputs/aar/lib-abi64-debug.aar
