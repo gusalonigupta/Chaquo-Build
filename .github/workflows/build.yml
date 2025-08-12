@@ -222,7 +222,6 @@ jobs:
     - name: Stop Gradle daemon (cleanup)
       run: ./gradlew --stop || true
 
-    # Build summary
     - name: List all built AARs
       run: |
         echo "All built AARs for yt-dlp version ${{ needs.check-ytdlp-version.outputs.ytdlp_version }}:"
@@ -282,7 +281,6 @@ jobs:
         EOF
         )
         
-        # Set multiline output
         {
           echo "notes<<EOF"
           echo "$RELEASE_NOTES"
@@ -293,13 +291,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Check if release exists and delete it if it does
         if gh release view "${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" >/dev/null 2>&1; then
           echo "Release already exists, deleting it first..."
-          gh release delete "v${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" --yes
+          gh release delete "${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" --yes
         fi
         
-        # Create the release
         gh release create "${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" \
           --title "yt-dlp ${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" \
           --notes '${{ steps.release_notes.outputs.notes }}' \
