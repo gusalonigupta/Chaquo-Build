@@ -259,25 +259,26 @@ jobs:
     - name: Generate release notes
       id: release_notes
       run: |
-        RELEASE_NOTES=$(cat << 'EOF'
+        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        RELEASE_NOTES=$(cat << EOF
         ## Android AAR Libraries for yt-dlp ${{ needs.check-ytdlp-version.outputs.ytdlp_version }}
         
         Built with Chaquopy for various Android architectures.
         
         ### Python 3.11 variants:
-        - **ABI32 Group** (armeabi-v7a + x86): `lib-abi32-debug.aar`
-        - **ARM32 only** (armeabi-v7a): `lib-arm32-debug.aar`
-        - **x86 only** (x86): `lib-x86-debug.aar`
+        - **ABI32 Group** (armeabi-v7a + x86): \`lib-abi32-debug.aar\`
+        - **ARM32 only** (armeabi-v7a): \`lib-arm32-debug.aar\`
+        - **x86 only** (x86): \`lib-x86-debug.aar\`
         
         ### Python 3.12 variants:
-        - **ABI64 Group** (arm64-v8a + x86_64): `lib-abi64-debug.aar`
-        - **ARM64 only** (arm64-v8a): `lib-arm64-debug.aar`
-        - **x86_64 only** (x86_64): `lib-x86_64-debug.aar`
+        - **ABI64 Group** (arm64-v8a + x86_64): \`lib-abi64-debug.aar\`
+        - **ARM64 only** (arm64-v8a): \`lib-arm64-debug.aar\`
+        - **x86_64 only** (x86_64): \`lib-x86_64-debug.aar\`
         
         ### Usage
         Add the appropriate AAR to your Android project based on your target architecture requirements.
         
-        Built on: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        Built on: $BUILD_DATE
         EOF
         )
         
@@ -292,11 +293,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Check if release exists and delete it if it does
+        if gh release view "${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" >/dev/null 2>&1; then
+          echo "Release already exists, deleting it first..."
+          gh release delete "v${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" --yes
+        fi
+        
         # Create the release
-        gh release create "v${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" \
+        gh release create "${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" \
           --title "yt-dlp ${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" \
           --notes '${{ steps.release_notes.outputs.notes }}' \
-          --latest
-        
-        # Upload all AAR files
-        gh release upload "${{ needs.check-ytdlp-version.outputs.ytdlp_version }}" release/*.aar
+          --latest \
+          release/*.aar
