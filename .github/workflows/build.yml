@@ -9,34 +9,34 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-        
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      
+
     - name: Create gradle wrapper properties
       run: |
         mkdir -p gradle/wrapper
         echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-        
+
     - name: Download gradle wrapper files
       run: |
         curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
         curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradlew -o gradlew
         curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradlew.bat -o gradlew.bat
-      
+
     - name: Make gradlew executable
       run: chmod +x ./gradlew
-        
+
     - name: Cache Gradle packages
       uses: actions/cache@v3
       with:
@@ -47,68 +47,121 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
-    # Note: Universal AAR not possible with Chaquopy due to different Python versions
-    # Each flavor must be built separately
+    # --------------------------
+    # Python 3.11 builds (ABI32, ARM32, x86)
+    # --------------------------
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Verify Python (3.11) on runner
+      run: |
+        python --version || true
+        python3 --version || true
+        python3.11 --version || true
+        which python || true
+        which python3 || true
+        which python3.11 || true
 
     - name: Build ABI32 Group (armeabi-v7a + x86, Python 3.11)
-      run: ./gradlew :lib:assembleAbi32Debug
-        
+      run: ./gradlew --no-daemon :lib:assembleAbi32Debug
+
+    - name: Build ARM32 only (armeabi-v7a, Python 3.11)
+      run: ./gradlew --no-daemon :lib:assembleArm32Debug
+
+    - name: Build x86 only (x86, Python 3.11)
+      run: ./gradlew --no-daemon :lib:assembleX86Debug
+
+    - name: Inspect built 3.11 AARs for bundled libpython
+      run: |
+        echo "Inspecting AARs (3.11 group)..."
+        for f in lib/build/outputs/aar/*.aar; do
+          echo "=== $f ==="
+          unzip -l "$f" | grep -E 'libpython|libpython3\.[0-9]+' || true
+        done
+
     - name: Upload ABI32 Group AAR
       uses: actions/upload-artifact@v4
       with:
         name: lib-abi32-debug
         path: lib/build/outputs/aar/lib-abi32-debug.aar
 
-    - name: Build ABI64 Group (arm64-v8a + x86_64, Python 3.12)
-      run: ./gradlew :lib:assembleAbi64Debug
-        
-    - name: Upload ABI64 Group AAR
-      uses: actions/upload-artifact@v4
-      with:
-        name: lib-abi64-debug
-        path: lib/build/outputs/aar/lib-abi64-debug.aar
-
-    - name: Build ARM64 only (arm64-v8a, Python 3.12)
-      run: ./gradlew :lib:assembleArm64Debug
-        
-    - name: Upload ARM64 AAR
-      uses: actions/upload-artifact@v4
-      with:
-        name: lib-arm64-debug
-        path: lib/build/outputs/aar/lib-arm64-debug.aar
-
-    - name: Build ARM32 only (armeabi-v7a, Python 3.11)
-      run: ./gradlew :lib:assembleArm32Debug
-        
     - name: Upload ARM32 AAR
       uses: actions/upload-artifact@v4
       with:
         name: lib-arm32-debug
         path: lib/build/outputs/aar/lib-arm32-debug.aar
 
-    - name: Build x86_64 only (x86_64, Python 3.12)
-      run: ./gradlew :lib:assembleX86_64Debug
-        
-    - name: Upload x86_64 AAR
-      uses: actions/upload-artifact@v4
-      with:
-        name: lib-x86_64-debug
-        path: lib/build/outputs/aar/lib-x86_64-debug.aar
-
-    - name: Build x86 only (x86, Python 3.11)
-      run: ./gradlew :lib:assembleX86Debug
-        
     - name: Upload x86 AAR
       uses: actions/upload-artifact@v4
       with:
         name: lib-x86-debug
         path: lib/build/outputs/aar/lib-x86-debug.aar
 
+    - name: Stop Gradle daemon (safe switch)
+      run: ./gradlew --stop || true
+
+    # --------------------------
+    # Python 3.12 builds (ABI64, ARM64, x86_64)
+    # --------------------------
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Verify Python (3.12) on runner
+      run: |
+        python --version || true
+        python3 --version || true
+        python3.12 --version || true
+        which python || true
+        which python3 || true
+        which python3.12 || true
+
+    - name: Build ABI64 Group (arm64-v8a + x86_64, Python 3.12)
+      run: ./gradlew --no-daemon :lib:assembleAbi64Debug
+
+    - name: Build ARM64 only (arm64-v8a, Python 3.12)
+      run: ./gradlew --no-daemon :lib:assembleArm64Debug
+
+    - name: Build x86_64 only (x86_64, Python 3.12)
+      run: ./gradlew --no-daemon :lib:assembleX86_64Debug
+
+    - name: Inspect built 3.12 AARs for bundled libpython
+      run: |
+        echo "Inspecting AARs (3.12 group)..."
+        for f in lib/build/outputs/aar/*.aar; do
+          echo "=== $f ==="
+          unzip -l "$f" | grep -E 'libpython|libpython3\.[0-9]+' || true
+        done
+
+    - name: Upload ABI64 Group AAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-abi64-debug
+        path: lib/build/outputs/aar/lib-abi64-debug.aar
+
+    - name: Upload ARM64 AAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-arm64-debug
+        path: lib/build/outputs/aar/lib-arm64-debug.aar
+
+    - name: Upload x86_64 AAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-x86_64-debug
+        path: lib/build/outputs/aar/lib-x86_64-debug.aar
+
+    - name: Stop Gradle daemon (cleanup)
+      run: ./gradlew --stop || true
+
     # Build summary
     - name: List all built AARs
       run: |
         echo "All built AARs:"
-        find lib/build/outputs/aar/ -name "*.aar" -exec ls -lh {} \;
+        find lib/build/outputs/aar/ -name "*.aar" -exec ls -lh {} \; || true
         echo ""
         echo "Total AAR count:"
-        find lib/build/outputs/aar/ -name "*.aar" | wc -l
+        find lib/build/outputs/aar/ -name "*.aar" | wc -l || true

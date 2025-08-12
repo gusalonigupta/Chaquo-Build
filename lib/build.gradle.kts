@@ -82,14 +82,14 @@ chaquopy {
             }
         }
         getByName("abi64") {
-            version = "3.11"
+            version = "3.12"
             pip {
                 options("--upgrade")
                 pipPackages.forEach { install(it) }
             }
         }
         getByName("arm64") {
-            version = "3.11"
+            version = "3.12"
             pip {
                 options("--upgrade")
                 pipPackages.forEach { install(it) }
@@ -103,7 +103,7 @@ chaquopy {
             }
         }
         getByName("x86_64") {
-            version = "3.11"
+            version = "3.12"
             pip {
                 options("--upgrade")
                 pipPackages.forEach { install(it) }
