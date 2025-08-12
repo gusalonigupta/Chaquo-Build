@@ -17,13 +17,37 @@ android {
         create("abi32") {
             dimension = "abi"
             ndk {
-                abiFilters += listOf("x86", "armeabi-v7a")
+                abiFilters += listOf("armeabi-v7a", "x86")
             }
         }
         create("abi64") {
             dimension = "abi"
             ndk {
                 abiFilters += listOf("arm64-v8a", "x86_64")
+            }
+        }        
+        create("arm64") {
+            dimension = "abi"
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
+        }
+        create("arm32") {
+            dimension = "abi"
+            ndk {
+                abiFilters += "armeabi-v7a"
+            }
+        }
+        create("x86_64") {
+            dimension = "abi"
+            ndk {
+                abiFilters += "x86_64"
+            }
+        }
+        create("x86") {
+            dimension = "abi"
+            ndk {
+                abiFilters += "x86"
             }
         }
     }
@@ -59,6 +83,34 @@ chaquopy {
         }
         getByName("abi64") {
             version = "3.12"
+            pip {
+                options("--upgrade")
+                pipPackages.forEach { install(it) }
+            }
+        }
+        getByName("arm64") {
+            version = "3.12"
+            pip {
+                options("--upgrade")
+                pipPackages.forEach { install(it) }
+            }
+        }
+        getByName("arm32") {
+            version = "3.11"
+            pip {
+                options("--upgrade")
+                pipPackages.forEach { install(it) }
+            }
+        }
+        getByName("x86_64") {
+            version = "3.12"
+            pip {
+                options("--upgrade")
+                pipPackages.forEach { install(it) }
+            }
+        }
+        getByName("x86") {
+            version = "3.11"
             pip {
                 options("--upgrade")
                 pipPackages.forEach { install(it) }
