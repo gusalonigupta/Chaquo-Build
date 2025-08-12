@@ -23,16 +23,13 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       
-    # This section is your clever solution for a PC-less environment.
     - name: Create gradle wrapper properties
       run: |
         mkdir -p gradle/wrapper
-        # This now matches your committed gradle-wrapper.properties file
         echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip" > gradle/wrapper/gradle-wrapper.properties
         
     - name: Download gradle wrapper files
       run: |
-        # Using curl to download the wrapper files because they are not in the repo
         curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
         curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradlew -o gradlew
         curl -L https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradlew.bat -o gradlew.bat
