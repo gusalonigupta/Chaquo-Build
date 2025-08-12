@@ -49,19 +49,20 @@ val pipPackages = listOf(
 )
 
 chaquopy {
-    defaultConfig {
-        pip {
-            options("--upgrade")
-            pipPackages.forEach { install(it) }
-        }
-    }
-
     productFlavors {
         getByName("abi32") {
             version = "3.11"
+            pip {
+                options("--upgrade")
+                pipPackages.forEach { install(it) }
+            }
         }
         getByName("abi64") {
             version = "3.12"
+            pip {
+                options("--upgrade")
+                pipPackages.forEach { install(it) }
+            }
         }
     }
 }
